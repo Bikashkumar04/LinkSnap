@@ -5,6 +5,10 @@ import com.bikash.LinkSnap.dto.ShortUrlResponseDTO;
 import com.bikash.LinkSnap.service.ShortUrlService;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/url")
@@ -18,15 +22,17 @@ public class ShortUrlController {
 
     @PostMapping("/shorten")
     public ShortUrlResponseDTO shortenUrl(@RequestBody CreateShortUrlRequestDTO request) {
-
         return service.createShortUrl(request);
-
     }
 
     @GetMapping("/{shortCode}")
-    public String redirect(@PathVariable String shortCode) {
+    public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
 
-        return service.redirect(shortCode);
+        String url = service.redirect(shortCode);
 
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(URI.create(url))
+                .build();
     }
 }
