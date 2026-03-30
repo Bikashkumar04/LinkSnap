@@ -21,4 +21,7 @@ public class CreateShortUrlRequestDTO {
 
     // Optional custom alias (example: linksnap.io/bikash)
     private String customShortCode;
+
+    // Optional click limit for expiration
+    private Integer maxClicks;
 }

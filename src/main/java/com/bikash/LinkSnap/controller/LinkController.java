@@ -4,7 +4,9 @@ import com.bikash.LinkSnap.dto.LinkDTO;
 import com.bikash.LinkSnap.entity.User;
 import com.bikash.LinkSnap.service.AuthorizationService;
 import com.bikash.LinkSnap.service.LinkService;
+import com.bikash.LinkSnap.service.QrCodeService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +20,16 @@ public class LinkController {
 
     private final LinkService linkService;
     private final AuthorizationService authorizationService;
+    private final QrCodeService qrCodeService;
 
-    public LinkController(LinkService linkService, AuthorizationService authorizationService) {
+    public LinkController(
+            LinkService linkService,
+            AuthorizationService authorizationService,
+            QrCodeService qrCodeService
+    ) {
         this.linkService = linkService;
         this.authorizationService = authorizationService;
+        this.qrCodeService = qrCodeService;
     }
 
     @PostMapping
@@ -101,6 +109,27 @@ public class LinkController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to view links");
         }
         return ResponseEntity.ok(linkService.listWorkspaceLinks(workspaceId));
+    }
+
+    @GetMapping(value = "/{linkId}/qr", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getLinkQrCode(
+            @PathVariable Long linkId,
+            Authentication authentication,
+            @RequestParam(defaultValue = "300") int size
+    ) {
+        Long currentUserId = currentUserId(authentication);
+        LinkDTO link = linkService.getLinkById(linkId);
+        if (!authorizationService.canViewWorkspace(currentUserId, link.getWorkspaceId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to view this link");
+        }
+
+        int qrSize = Math.max(120, Math.min(size, 1000));
+        String qrContent = linkService.buildShortLink(linkId);
+        byte[] png = qrCodeService.generatePng(qrContent, qrSize);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(png);
     }
 
     private Long currentUserId(Authentication authentication) {

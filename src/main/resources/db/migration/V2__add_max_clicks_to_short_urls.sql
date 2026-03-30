@@ -1,0 +1,2 @@
+ALTER TABLE short_urls
+    ADD COLUMN IF NOT EXISTS max_clicks INTEGER;

@@ -17,4 +17,6 @@ public interface LinkService {
     LinkDTO getLinkById(Long linkId);
 
     List<LinkDTO> listWorkspaceLinks(Long workspaceId);
+
+    String buildShortLink(Long linkId);
 }

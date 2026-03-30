@@ -34,6 +34,9 @@ public class ShortUrls {
     @Column(name = "click_count")
     private int clickCount;
 
+    @Column(name = "max_clicks")
+    private Integer maxClicks;
+
     @Column(name = "user_id")
     private Long userId;
 
@@ -44,12 +47,13 @@ public class ShortUrls {
 
     public ShortUrls(String originalUrl, String shortCode,
                      LocalDateTime createdAt, LocalDateTime expiryAt,
-                     int clickCount, Long userId, boolean isActive) {
+                     int clickCount, Integer maxClicks, Long userId, boolean isActive) {
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
         this.expiryAt = expiryAt;
         this.clickCount = clickCount;
+        this.maxClicks = maxClicks;
         this.userId = userId;
         this.isActive = isActive;
     }

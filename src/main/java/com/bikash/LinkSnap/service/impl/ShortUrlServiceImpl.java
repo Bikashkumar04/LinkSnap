@@ -32,6 +32,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         url.setCreatedAt(LocalDateTime.now());
         url.setExpiryAt(request.getExpiryAt());
         url.setClickCount(0);
+        url.setMaxClicks(request.getMaxClicks());
         url.setUserId(request.getUserId());
         url.setActive(true);
 
@@ -81,6 +82,9 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         // Check expiry
         if (url.getExpiryAt() != null && url.getExpiryAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("Short URL has expired");
+        }
+        if (url.getMaxClicks() != null && url.getClickCount() >= url.getMaxClicks()) {
+            throw new IllegalStateException("Short URL has reached max click limit");
         }
 
         // Increase click count
