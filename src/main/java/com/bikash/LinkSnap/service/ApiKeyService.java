@@ -14,6 +14,8 @@ public interface ApiKeyService {
 
     boolean validateApiKey(Long workspaceId, String rawApiKey);
 
+    boolean hasRequiredScope(Long workspaceId, String rawApiKey, String requiredScope);
+
     void updateLastUsed(Long apiKeyId);
 
     List<ApiKeyDTO> listWorkspaceApiKeys(Long workspaceId);

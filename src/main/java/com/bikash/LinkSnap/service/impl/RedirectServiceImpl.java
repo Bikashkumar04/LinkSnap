@@ -71,10 +71,12 @@ public class RedirectServiceImpl implements RedirectService {
         event.setReferer(referer);
         event.setUserAgent(userAgent);
         event.setDeviceType(resolveDeviceType(userAgent));
+        event.setBrowser(resolveBrowser(userAgent));
+        event.setOs(resolveOs(userAgent));
         event.setUtmSource(utmSource);
         event.setUtmMedium(utmMedium);
         event.setUtmCampaign(utmCampaign);
-        event.setBot(false);
+        event.setBot(isBot(userAgent, referer));
         linkClickEventService.recordClickEvent(event);
 
         return link.getOriginalUrl();
@@ -106,5 +108,43 @@ public class RedirectServiceImpl implements RedirectService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("Unable to hash IP address", e);
         }
+    }
+
+    private String resolveBrowser(String userAgent) {
+        if (userAgent == null) {
+            return "unknown";
+        }
+        String ua = userAgent.toLowerCase();
+        if (ua.contains("edg/")) return "edge";
+        if (ua.contains("chrome/")) return "chrome";
+        if (ua.contains("firefox/")) return "firefox";
+        if (ua.contains("safari/") && !ua.contains("chrome/")) return "safari";
+        if (ua.contains("opr/") || ua.contains("opera")) return "opera";
+        return "other";
+    }
+
+    private String resolveOs(String userAgent) {
+        if (userAgent == null) {
+            return "unknown";
+        }
+        String ua = userAgent.toLowerCase();
+        if (ua.contains("windows")) return "windows";
+        if (ua.contains("mac os") || ua.contains("macintosh")) return "macos";
+        if (ua.contains("android")) return "android";
+        if (ua.contains("iphone") || ua.contains("ipad") || ua.contains("ios")) return "ios";
+        if (ua.contains("linux")) return "linux";
+        return "other";
+    }
+
+    private boolean isBot(String userAgent, String referer) {
+        String ua = userAgent == null ? "" : userAgent.toLowerCase();
+        String ref = referer == null ? "" : referer.toLowerCase();
+        return ua.contains("bot")
+                || ua.contains("spider")
+                || ua.contains("crawler")
+                || ua.contains("preview")
+                || ref.contains("t.co/i/web/status")
+                || ref.contains("slack.com")
+                || ref.contains("discord.com");
     }
 }

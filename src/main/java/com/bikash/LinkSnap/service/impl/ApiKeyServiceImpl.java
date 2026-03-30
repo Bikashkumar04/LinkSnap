@@ -12,6 +12,8 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -90,6 +92,21 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean hasRequiredScope(Long workspaceId, String rawApiKey, String requiredScope) {
+        String keyPrefix = extractPrefix(rawApiKey);
+        if (keyPrefix == null || requiredScope == null || requiredScope.isBlank()) {
+            return false;
+        }
+        return apiKeyRepository.findByWorkspaceIdAndKeyPrefix(workspaceId, keyPrefix)
+                .filter(key -> key.getRevokedAt() == null)
+                .filter(key -> key.getExpiresAt() == null || key.getExpiresAt().isAfter(LocalDateTime.now()))
+                .filter(key -> passwordEncoder.matches(rawApiKey, key.getKeyHash()))
+                .map(key -> parseScopes(key.getScopes()).contains(requiredScope))
+                .orElse(false);
+    }
+
+    @Override
     @Transactional
     public void updateLastUsed(Long apiKeyId) {
         apiKeyRepository.findById(apiKeyId).ifPresent(apiKey -> {
@@ -155,6 +172,16 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             return null;
         }
         return rawApiKey.substring(0, dotIndex);
+    }
+
+    private Set<String> parseScopes(String scopes) {
+        if (scopes == null || scopes.isBlank()) {
+            return Set.of();
+        }
+        return java.util.Arrays.stream(scopes.split("[,\\s]+"))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet());
     }
 
     private record GeneratedApiKey(String prefix, String raw) {}
