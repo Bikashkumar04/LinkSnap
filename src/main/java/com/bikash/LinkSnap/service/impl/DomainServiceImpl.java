@@ -33,6 +33,14 @@ public class DomainServiceImpl implements DomainService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public DomainDTO getDomainById(Long domainId) {
+        Domain domain = domainRepository.findById(domainId)
+                .orElseThrow(() -> new IllegalArgumentException("Domain not found"));
+        return toDTO(domain);
+    }
+
+    @Override
     @Transactional
     public DomainDTO verifyDomain(Long domainId) {
         Domain domain = domainRepository.findById(domainId)

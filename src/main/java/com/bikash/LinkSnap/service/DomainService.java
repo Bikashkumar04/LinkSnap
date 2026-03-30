@@ -8,6 +8,8 @@ public interface DomainService {
 
     DomainDTO addDomain(DomainDTO request);
 
+    DomainDTO getDomainById(Long domainId);
+
     DomainDTO verifyDomain(Long domainId);
 
     DomainDTO setPrimaryDomain(Long workspaceId, Long domainId);
