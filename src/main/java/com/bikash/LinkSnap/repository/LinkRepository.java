@@ -14,6 +14,8 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
 
     Optional<Link> findByDomainIdAndShortCode(Long domainId, String shortCode);
 
+    Optional<Link> findFirstByShortCodeAndDeletedAtIsNull(String shortCode);
+
     boolean existsByDomainIdAndShortCode(Long domainId, String shortCode);
 
     Page<Link> findByWorkspaceIdAndDeletedAtIsNull(Long workspaceId, Pageable pageable);

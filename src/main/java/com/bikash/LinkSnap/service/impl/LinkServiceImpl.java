@@ -33,21 +33,22 @@ public class LinkServiceImpl implements LinkService {
     @Override
     @Transactional
     public LinkDTO createLink(LinkDTO request) {
+        Long domainId = resolveDomainId(request);
         String shortCode = request.getShortCode();
         if (shortCode == null || shortCode.isBlank()) {
             do {
                 shortCode = Base62Encoder.generateRandom(6);
-            } while (linkRepository.existsByDomainIdAndShortCode(request.getDomainId(), shortCode));
+            } while (linkRepository.existsByDomainIdAndShortCode(domainId, shortCode));
         } else {
             validateShortCode(shortCode);
-            if (linkRepository.existsByDomainIdAndShortCode(request.getDomainId(), shortCode)) {
+            if (linkRepository.existsByDomainIdAndShortCode(domainId, shortCode)) {
                 throw new IllegalArgumentException("Short code already exists for this domain");
             }
         }
 
         Link link = new Link();
         link.setWorkspaceId(request.getWorkspaceId());
-        link.setDomainId(request.getDomainId());
+        link.setDomainId(domainId);
         link.setCreatedByUserId(request.getCreatedByUserId());
         link.setShortCode(shortCode);
         link.setOriginalUrl(request.getOriginalUrl());
@@ -120,6 +121,30 @@ public class LinkServiceImpl implements LinkService {
             return "https://" + domain.getHost() + "/" + link.getShortCode();
         }
         return defaultDomain + "/" + link.getShortCode();
+    }
+
+    private Long resolveDomainId(LinkDTO request) {
+        if (request.getDomainId() != null) {
+            return request.getDomainId();
+        }
+        String host = extractHost(defaultDomain);
+        Domain domain = domainRepository.findByHost(host).orElseGet(() -> {
+            Domain d = new Domain();
+            d.setWorkspaceId(request.getWorkspaceId());
+            d.setHost(host);
+            d.setPrimary(true);
+            d.setVerificationStatus("VERIFIED");
+            return domainRepository.save(d);
+        });
+        return domain.getId();
+    }
+
+    private String extractHost(String baseUrl) {
+        String sanitized = baseUrl.replace("https://", "").replace("http://", "");
+        int slash = sanitized.indexOf('/');
+        sanitized = slash > 0 ? sanitized.substring(0, slash) : sanitized;
+        int colon = sanitized.indexOf(':');
+        return colon > 0 ? sanitized.substring(0, colon) : sanitized;
     }
 
     @Override

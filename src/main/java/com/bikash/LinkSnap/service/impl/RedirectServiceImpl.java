@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class RedirectServiceImpl implements RedirectService {
@@ -44,10 +45,10 @@ public class RedirectServiceImpl implements RedirectService {
             String utmMedium,
             String utmCampaign
     ) {
-        Domain domain = domainRepository.findByHost(host)
-                .orElseThrow(() -> new IllegalArgumentException("Domain not found"));
-
-        Link link = linkRepository.findByDomainIdAndShortCode(domain.getId(), shortCode)
+        Optional<Domain> domain = domainRepository.findByHost(host);
+        Link link = domain
+                .flatMap(d -> linkRepository.findByDomainIdAndShortCode(d.getId(), shortCode))
+                .or(() -> linkRepository.findFirstByShortCodeAndDeletedAtIsNull(shortCode))
                 .orElseThrow(() -> new IllegalArgumentException("Short URL not found"));
 
         if (!link.isActive()) {
