@@ -10,12 +10,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
 server:
   port: 8080
@@ -24,6 +28,6 @@ linksnap:
   domain: http://localhost:8080
 
 jwt:
-  secret: ${JWT_SECRET:replace-with-a-long-random-secret-key-min-32-chars}
+  secret: ${JWT_SECRET:9c3f7e4a6d8b1c2f5a7e9d3b6c4f1a2e8d7c9b3a6e4f1c2}
   access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
   refresh-token-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
