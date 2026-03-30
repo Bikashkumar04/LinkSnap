@@ -18,6 +18,7 @@ public class ApiKeyDTO {
     private Long createdByUserId;
     private String name;
     private String keyPrefix;
+    private String rawApiKey;
     private String scopes;
     private LocalDateTime lastUsedAt;
     private LocalDateTime expiresAt;

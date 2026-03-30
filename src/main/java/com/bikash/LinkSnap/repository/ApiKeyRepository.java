@@ -13,6 +13,10 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     Optional<ApiKey> findByWorkspaceIdAndKeyPrefix(Long workspaceId, String keyPrefix);
 
+    Optional<ApiKey> findByIdAndWorkspaceId(Long id, Long workspaceId);
+
+    boolean existsByKeyPrefix(String keyPrefix);
+
     List<ApiKey> findByWorkspaceIdAndRevokedAtIsNull(Long workspaceId);
 
     List<ApiKey> findByWorkspaceIdAndExpiresAtBefore(Long workspaceId, LocalDateTime expiresAt);

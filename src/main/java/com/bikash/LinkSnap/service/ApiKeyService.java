@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface ApiKeyService {
 
-    ApiKeyDTO createApiKey(ApiKeyDTO request);
+    ApiKeyDTO createApiKey(Long workspaceId, Long createdByUserId, ApiKeyDTO request);
 
-    ApiKeyDTO rotateApiKey(Long apiKeyId);
+    ApiKeyDTO rotateApiKey(Long workspaceId, Long apiKeyId);
 
-    void revokeApiKey(Long apiKeyId);
+    void revokeApiKey(Long workspaceId, Long apiKeyId);
 
-    boolean validateApiKey(Long workspaceId, String keyPrefix);
+    boolean validateApiKey(Long workspaceId, String rawApiKey);
 
     void updateLastUsed(Long apiKeyId);
 
