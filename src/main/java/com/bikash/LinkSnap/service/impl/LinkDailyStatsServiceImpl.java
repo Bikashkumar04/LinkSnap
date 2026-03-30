@@ -1,23 +1,35 @@
 package com.bikash.LinkSnap.service.impl;
 
 import com.bikash.LinkSnap.dto.LinkDailyStatsDTO;
+import com.bikash.LinkSnap.entity.LinkClickEvent;
 import com.bikash.LinkSnap.entity.LinkDailyStats;
 import com.bikash.LinkSnap.entity.LinkDailyStatsId;
+import com.bikash.LinkSnap.repository.LinkClickEventRepository;
 import com.bikash.LinkSnap.repository.LinkDailyStatsRepository;
 import com.bikash.LinkSnap.service.LinkDailyStatsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class LinkDailyStatsServiceImpl implements LinkDailyStatsService {
 
     private final LinkDailyStatsRepository linkDailyStatsRepository;
+    private final LinkClickEventRepository linkClickEventRepository;
 
-    public LinkDailyStatsServiceImpl(LinkDailyStatsRepository linkDailyStatsRepository) {
+    public LinkDailyStatsServiceImpl(
+            LinkDailyStatsRepository linkDailyStatsRepository,
+            LinkClickEventRepository linkClickEventRepository
+    ) {
         this.linkDailyStatsRepository = linkDailyStatsRepository;
+        this.linkClickEventRepository = linkClickEventRepository;
     }
 
     @Override
@@ -45,9 +57,43 @@ public class LinkDailyStatsServiceImpl implements LinkDailyStatsService {
     }
 
     @Override
+    @Transactional
     public void aggregateForDate(LocalDate date) {
-        // Placeholder for scheduled aggregation from link_click_events to link_daily_stats.
-        // Keep intentionally empty until aggregation pipeline is added.
+        LocalDateTime from = date.atStartOfDay();
+        LocalDateTime to = from.plusDays(1);
+
+        List<LinkClickEvent> events = linkClickEventRepository.findByClickedAtBetween(from, to);
+        Map<Long, List<LinkClickEvent>> byLink = events.stream()
+                .collect(Collectors.groupingBy(LinkClickEvent::getLinkId));
+
+        for (Map.Entry<Long, List<LinkClickEvent>> entry : byLink.entrySet()) {
+            Long linkId = entry.getKey();
+            List<LinkClickEvent> linkEvents = entry.getValue();
+
+            long totalClicks = linkEvents.size();
+            long botClicks = linkEvents.stream().filter(LinkClickEvent::isBot).count();
+
+            Set<String> uniqueVisitorKeys = new HashSet<>();
+            for (LinkClickEvent event : linkEvents) {
+                if (event.getIpHash() != null && !event.getIpHash().isBlank()) {
+                    uniqueVisitorKeys.add(event.getIpHash());
+                } else {
+                    uniqueVisitorKeys.add("event:" + event.getId());
+                }
+            }
+            long uniqueClicks = uniqueVisitorKeys.size();
+
+            LinkDailyStatsId id = new LinkDailyStatsId(linkId, date);
+            LinkDailyStats stats = linkDailyStatsRepository.findById(id).orElseGet(() -> {
+                LinkDailyStats s = new LinkDailyStats();
+                s.setId(id);
+                return s;
+            });
+            stats.setTotalClicks(totalClicks);
+            stats.setUniqueClicks(uniqueClicks);
+            stats.setBotClicks(botClicks);
+            linkDailyStatsRepository.save(stats);
+        }
     }
 
     private LinkDailyStatsDTO toDTO(LinkDailyStats stats) {
