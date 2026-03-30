@@ -7,13 +7,18 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateShortUrlRequestDTO {
+
     private String originalUrl;
+
     private LocalDateTime expiryAt;
+
     private Long userId;
+
+    // Optional custom alias (example: linksnap.io/bikash)
+    private String customShortCode;
 }

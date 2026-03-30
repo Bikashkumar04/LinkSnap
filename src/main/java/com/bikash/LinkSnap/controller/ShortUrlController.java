@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/url")
 public class ShortUrlController {
 
     private final ShortUrlService service;
@@ -20,11 +19,13 @@ public class ShortUrlController {
         this.service = service;
     }
 
-    @PostMapping("/shorten")
+    // Create short URL
+    @PostMapping("/api/urls/shorten")
     public ShortUrlResponseDTO shortenUrl(@RequestBody CreateShortUrlRequestDTO request) {
         return service.createShortUrl(request);
     }
 
+    // Redirect using short code
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
 

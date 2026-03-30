@@ -37,9 +37,24 @@ public class ShortUrlServiceImpl implements ShortUrlService {
 
         String shortCode;
 
-        do {
-            shortCode = Base62Encoder.generateRandom(6);
-        } while (repository.existsByShortCode(shortCode));
+        // Case 1: Custom short code provided
+        if (request.getCustomShortCode() != null && !request.getCustomShortCode().isBlank()) {
+
+            shortCode = request.getCustomShortCode();
+
+            validateShortCode(shortCode);
+
+            if (repository.existsByShortCode(shortCode)) {
+                throw new IllegalArgumentException("Custom short code already exists");
+            }
+
+        } else {
+
+            // Case 2: Generate random short code
+            do {
+                shortCode = Base62Encoder.generateRandom(6);
+            } while (repository.existsByShortCode(shortCode));
+        }
 
         url.setShortCode(shortCode);
 
@@ -58,7 +73,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         ShortUrls url = repository.findByShortCode(shortCode)
                 .orElseThrow(() -> new IllegalArgumentException("Short URL not found"));
 
-        // Check if inactive
+        // Check inactive link
         if (!url.isActive()) {
             throw new IllegalStateException("Short URL is inactive");
         }
@@ -68,10 +83,19 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             throw new IllegalStateException("Short URL has expired");
         }
 
-        // Increment click count
+        // Increase click count
         url.setClickCount(url.getClickCount() + 1);
         repository.save(url);
 
         return url.getOriginalUrl();
+    }
+
+    private void validateShortCode(String code) {
+
+        if (!code.matches("^[a-zA-Z0-9_-]{4,20}$")) {
+            throw new IllegalArgumentException(
+                    "Short code must be 4-20 characters and contain only letters, numbers, - or _"
+            );
+        }
     }
 }
