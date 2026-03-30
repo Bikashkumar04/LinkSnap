@@ -8,6 +8,9 @@ import com.bikash.LinkSnap.service.QrCodeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,6 +44,7 @@ public class LinkController {
         if (!authorizationService.canEditWorkspace(currentUserId, request.getWorkspaceId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to create links");
         }
+        request.setCreatedByUserId(currentUserId);
         return ResponseEntity.ok(linkService.createLink(request));
     }
 
@@ -109,6 +113,37 @@ public class LinkController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to view links");
         }
         return ResponseEntity.ok(linkService.listWorkspaceLinks(workspaceId));
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<Page<LinkDTO>> dashboardLinks(
+            @RequestParam Long workspaceId,
+            @RequestParam(defaultValue = "false") boolean mineOnly,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) Long tagId,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication
+    ) {
+        Long currentUserId = currentUserId(authentication);
+        if (!authorizationService.canViewWorkspace(currentUserId, workspaceId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to view links");
+        }
+
+        int safeSize = Math.max(1, Math.min(size, 100));
+        int safePage = Math.max(0, page);
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+
+        return ResponseEntity.ok(linkService.searchDashboardLinks(
+                workspaceId,
+                currentUserId,
+                mineOnly,
+                active,
+                tagId,
+                search,
+                pageable
+        ));
     }
 
     @GetMapping(value = "/{linkId}/qr", produces = MediaType.IMAGE_PNG_VALUE)

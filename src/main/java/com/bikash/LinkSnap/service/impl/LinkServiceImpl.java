@@ -8,6 +8,8 @@ import com.bikash.LinkSnap.repository.LinkRepository;
 import com.bikash.LinkSnap.service.LinkService;
 import com.bikash.LinkSnap.util.Base62Encoder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,6 +120,30 @@ public class LinkServiceImpl implements LinkService {
             return "https://" + domain.getHost() + "/" + link.getShortCode();
         }
         return defaultDomain + "/" + link.getShortCode();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<LinkDTO> searchDashboardLinks(
+            Long workspaceId,
+            Long currentUserId,
+            boolean mineOnly,
+            Boolean active,
+            Long tagId,
+            String search,
+            Pageable pageable
+    ) {
+        Long createdByUserId = mineOnly ? currentUserId : null;
+        String normalizedSearch = (search == null || search.isBlank()) ? null : search.trim();
+        return linkRepository.searchDashboardLinks(
+                        workspaceId,
+                        createdByUserId,
+                        active,
+                        tagId,
+                        normalizedSearch,
+                        pageable
+                )
+                .map(this::toDTO);
     }
 
     private void validateShortCode(String code) {
