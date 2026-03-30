@@ -9,12 +9,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Map;
 
 @RestController
+@Deprecated(since = "2026-03-30", forRemoval = false)
 public class ShortUrlController {
+
+    private static final Logger log = LoggerFactory.getLogger(ShortUrlController.class);
+    private static final String SUNSET_DATE = "Wed, 31 Dec 2026 23:59:59 GMT";
+    private static final String SUCCESSOR_LINK = "</api/links>; rel=\"successor-version\"";
 
     private final ShortUrlService service;
     private final RedirectService redirectService;
@@ -26,12 +33,19 @@ public class ShortUrlController {
 
     // Create short URL
     @PostMapping("/api/urls/shorten")
-    public ShortUrlResponseDTO shortenUrl(@RequestBody CreateShortUrlRequestDTO request) {
-        return service.createShortUrl(request);
+    @Deprecated(since = "2026-03-30", forRemoval = false)
+    public ResponseEntity<ShortUrlResponseDTO> shortenUrl(@RequestBody CreateShortUrlRequestDTO request) {
+        ShortUrlResponseDTO response = service.createShortUrl(request);
+        return ResponseEntity.ok()
+                .header("Deprecation", "true")
+                .header("Sunset", SUNSET_DATE)
+                .header("Link", SUCCESSOR_LINK)
+                .body(response);
     }
 
     // Redirect using short code
     @GetMapping("/{shortCode}")
+    @Deprecated(since = "2026-03-30", forRemoval = false)
     public ResponseEntity<Void> redirect(
             @PathVariable String shortCode,
             HttpServletRequest request,
@@ -52,12 +66,16 @@ public class ShortUrlController {
             );
         } catch (IllegalArgumentException ex) {
             // Backward compatibility while legacy short_urls is still active.
+            log.warn("Legacy redirect fallback used for shortCode={}", shortCode);
             url = service.redirect(shortCode);
         }
 
 
         return ResponseEntity
                 .status(HttpStatus.FOUND)
+                .header("Deprecation", "true")
+                .header("Sunset", SUNSET_DATE)
+                .header("Link", SUCCESSOR_LINK)
                 .location(URI.create(url))
                 .build();
     }
