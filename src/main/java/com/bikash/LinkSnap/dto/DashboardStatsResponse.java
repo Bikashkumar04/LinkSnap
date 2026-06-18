@@ -9,4 +9,8 @@ public class DashboardStatsResponse {
 
     private Long totalLinks;
     private Long totalClicks;
+
+    private Long activeLinks;
+
+    private Long expiredLinks;
 }

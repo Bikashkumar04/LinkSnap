@@ -13,4 +13,9 @@ public class UrlAnalyticsResponse {
     private String shortCode;
     private Long clickCount;
     private LocalDateTime createdAt;
+
+
+    private ExpiryType expiryType;
+    private LocalDateTime expiresAt;
+    private Boolean expired;
 }

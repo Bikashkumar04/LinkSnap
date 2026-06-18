@@ -1,5 +1,6 @@
 package com.bikash.LinkSnap.entity;
 
+import com.bikash.LinkSnap.dto.ExpiryType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,7 +30,15 @@ public class UrlMapping {
 
     private Long clickCount = 0L;
 
+
+
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    private ExpiryType expiryType;
+
+    private LocalDateTime expiresAt;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

@@ -1,6 +1,5 @@
 package com.bikash.LinkSnap.controller;
 
-import com.bikash.LinkSnap.dto.ClickEventResponse;
 import com.bikash.LinkSnap.entity.ClickEvent;
 import com.bikash.LinkSnap.entity.UrlMapping;
 import com.bikash.LinkSnap.repository.ClickEventRepository;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -37,12 +35,26 @@ public class RedirectController {
                                 new RuntimeException(
                                         "URL not found"));
 
+        // Check if link is expired
+        if (urlMapping.getExpiresAt() != null
+                && LocalDateTime.now()
+                .isAfter(
+                        urlMapping.getExpiresAt()
+                )) {
+
+            return ResponseEntity
+                    .status(HttpStatus.GONE)
+                    .build();
+        }
+
+        // Increment click count
         urlMapping.setClickCount(
                 urlMapping.getClickCount() + 1
         );
 
         repository.save(urlMapping);
 
+        // Save click event
         ClickEvent clickEvent =
                 new ClickEvent();
 
@@ -58,10 +70,13 @@ public class RedirectController {
                 request.getHeader("User-Agent")
         );
 
-        clickEvent.setUrlMapping(urlMapping);
+        clickEvent.setUrlMapping(
+                urlMapping
+        );
 
         clickEventRepository.save(clickEvent);
 
+        // Redirect
         return ResponseEntity
                 .status(HttpStatus.FOUND)
                 .location(

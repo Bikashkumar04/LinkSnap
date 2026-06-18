@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,13 +29,24 @@ public class UrlMappingService {
         User currentUser =
                 authenticationService.getCurrentUser();
 
-        UrlMapping urlMapping = new UrlMapping();
+        validateExpiry(dto);
+
+        UrlMapping urlMapping =
+                new UrlMapping();
 
         urlMapping.setOriginalUrl(
                 dto.getOriginalUrl()
         );
 
         urlMapping.setUser(currentUser);
+
+        urlMapping.setExpiryType(
+                dto.getExpiryType()
+        );
+
+        urlMapping.setExpiresAt(
+                calculateExpiry(dto)
+        );
 
         UrlMapping saved =
                 repository.save(urlMapping);
@@ -58,7 +70,9 @@ public class UrlMappingService {
         } else {
 
             shortCode =
-                    base62Encoder.encode(saved.getId());
+                    base62Encoder.encode(
+                            saved.getId()
+                    );
         }
 
         saved.setShortCode(shortCode);
@@ -74,6 +88,14 @@ public class UrlMappingService {
 
         response.setCustomAlias(
                 dto.getCustomAlias()
+        );
+
+        response.setExpiryType(
+                saved.getExpiryType()
+        );
+
+        response.setCustomExpiryAt(
+                saved.getExpiresAt()
         );
 
         response.setShortCode(
@@ -207,12 +229,24 @@ public class UrlMappingService {
                         urlMapping.getShortCode()
                 )
                 .clickCount(
-                        Long.valueOf(
-                                urlMapping.getClickCount()
-                        )
+                        urlMapping.getClickCount()
                 )
                 .createdAt(
                         urlMapping.getCreatedAt()
+                )
+                .expiryType(
+                        urlMapping.getExpiryType()
+                )
+                .expiresAt(
+                        urlMapping.getExpiresAt()
+                )
+                .expired(
+                        urlMapping.getExpiresAt() != null
+                                &&
+                                LocalDateTime.now()
+                                        .isAfter(
+                                                urlMapping.getExpiresAt()
+                                        )
                 )
                 .build();
     }
@@ -230,13 +264,30 @@ public class UrlMappingService {
         long totalLinks = urls.size();
 
         long totalClicks = urls.stream()
-                .mapToLong(UrlMapping::getClickCount)
+                .mapToLong(
+                        UrlMapping::getClickCount
+                )
                 .sum();
+
+        long expiredLinks = urls.stream()
+                .filter(url ->
+                        url.getExpiresAt() != null
+                                &&
+                                LocalDateTime.now()
+                                        .isAfter(
+                                                url.getExpiresAt()
+                                        ))
+                .count();
+
+        long activeLinks =
+                totalLinks - expiredLinks;
 
         return DashboardStatsResponse
                 .builder()
                 .totalLinks(totalLinks)
                 .totalClicks(totalClicks)
+                .activeLinks(activeLinks)
+                .expiredLinks(expiredLinks)
                 .build();
     }
 
@@ -369,5 +420,67 @@ public class UrlMappingService {
                         url.getClickCount()
                 )
                 .build();
+    }
+
+
+    private void validateExpiry(
+            UrlMappingDto dto) {
+
+        if (dto.getExpiryType() ==
+                ExpiryType.CUSTOM &&
+                dto.getCustomExpiryAt() == null) {
+
+            throw new RuntimeException(
+                    "Custom expiry date required"
+            );
+        }
+
+        if (dto.getCustomExpiryAt() != null &&
+                dto.getCustomExpiryAt()
+                        .isBefore(
+                                LocalDateTime.now()
+                        )) {
+
+            throw new RuntimeException(
+                    "Expiry date must be in future"
+            );
+        }
+    }
+
+
+    private LocalDateTime calculateExpiry(
+            UrlMappingDto dto) {
+
+        if (dto.getExpiryType() == null ||
+                dto.getExpiryType()
+                        == ExpiryType.LIFETIME) {
+
+            return null;
+        }
+
+        return switch (
+                dto.getExpiryType()) {
+
+            case ONE_HOUR ->
+                    LocalDateTime.now()
+                            .plusHours(1);
+
+            case ONE_DAY ->
+                    LocalDateTime.now()
+                            .plusDays(1);
+
+            case ONE_WEEK ->
+                    LocalDateTime.now()
+                            .plusWeeks(1);
+
+            case ONE_MONTH ->
+                    LocalDateTime.now()
+                            .plusMonths(1);
+
+            case CUSTOM ->
+                    dto.getCustomExpiryAt();
+
+            default -> null;
+        };
     }
 }
