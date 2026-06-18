@@ -8,6 +8,7 @@ import com.bikash.LinkSnap.repository.UrlMappingRepository;
 import com.bikash.LinkSnap.security.AuthenticationService;
 import com.bikash.LinkSnap.util.Base62Encoder;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -20,6 +21,7 @@ public class UrlMappingService {
     private final UrlMappingRepository repository;
     private final Base62Encoder base62Encoder;
     private final AuthenticationService authenticationService;
+    private final ModelMapper modelMapper;
 
     public UrlMappingDto shortenUrl(UrlMappingDto dto) {
 
@@ -57,25 +59,44 @@ public class UrlMappingService {
     // for example id	username
     //1	bikash
     //2	john
-    public List<UrlMapping> getMyLinks() {
+    public List<LinkResponse> getMyLinks() {
 
         User currentUser =
                 authenticationService.getCurrentUser();
 
-        return repository.findByUser(currentUser);
+        return repository.findByUser(currentUser)
+                .stream()
+                .map(url ->
+                        modelMapper.map(
+                                url,
+                                LinkResponse.class
+                        )
+                )
+                .toList();
     }
 
 
     //Get Single Link
-    public UrlMapping getLink(Long id) {
+    public LinkResponse getLink(Long id) {
 
         User currentUser =
                 authenticationService.getCurrentUser();
 
-        return repository
-                .findByIdAndUser(id, currentUser)
-                .orElseThrow(() ->
-                        new RuntimeException("Link not found"));
+        UrlMapping urlMapping =
+                repository
+                        .findByIdAndUser(
+                                id,
+                                currentUser
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Link not found"
+                                ));
+
+        return modelMapper.map(
+                urlMapping,
+                LinkResponse.class
+        );
     }
 
 
@@ -99,7 +120,7 @@ public class UrlMappingService {
 
 
     //update shortLink
-    public UrlMapping updateLink(
+    public LinkResponse updateLink(
             Long id,
             UpdateUrlRequest request) {
 
@@ -112,15 +133,21 @@ public class UrlMappingService {
                         currentUser
                 ).orElseThrow(() ->
                         new RuntimeException(
-                                "Link not found"));
+                                "Link not found"
+                        ));
 
         urlMapping.setOriginalUrl(
                 request.getOriginalUrl()
         );
 
-        return repository.save(urlMapping);
-    }
+        UrlMapping updated =
+                repository.save(urlMapping);
 
+        return modelMapper.map(
+                updated,
+                LinkResponse.class
+        );
+    }
 
     public UrlAnalyticsResponse getAnalytics(
             Long id) {

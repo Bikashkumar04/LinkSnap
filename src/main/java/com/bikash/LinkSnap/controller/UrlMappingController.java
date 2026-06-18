@@ -1,10 +1,6 @@
 package com.bikash.LinkSnap.controller;
 
-import com.bikash.LinkSnap.dto.ClickEventResponse;
-import com.bikash.LinkSnap.dto.UpdateUrlRequest;
-import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
-import com.bikash.LinkSnap.dto.UrlMappingDto;
-import com.bikash.LinkSnap.entity.UrlMapping;
+import com.bikash.LinkSnap.dto.*;
 import com.bikash.LinkSnap.services.UrlMappingService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +23,7 @@ public class UrlMappingController {
     }
 
     @GetMapping("/my-links")
-    public ResponseEntity<List<UrlMapping>> getMyLinks() {
+    public ResponseEntity<List<LinkResponse>> getMyLinks() {
 
         return ResponseEntity.ok(
                 urlMappingService.getMyLinks()
@@ -36,7 +32,7 @@ public class UrlMappingController {
 
     //Get Single Link
     @GetMapping("/{id}")
-    public ResponseEntity<UrlMapping> getLink(
+    public ResponseEntity<LinkResponse> getLink(
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
@@ -57,7 +53,7 @@ public class UrlMappingController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<UrlMapping> updateLink(
+    public ResponseEntity<LinkResponse> updateLink(
             @PathVariable Long id,
             @RequestBody UpdateUrlRequest request) {
 
