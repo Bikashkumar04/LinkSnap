@@ -3,6 +3,7 @@ package com.bikash.LinkSnap.services;
 import com.bikash.LinkSnap.dto.*;
 import com.bikash.LinkSnap.entity.UrlMapping;
 import com.bikash.LinkSnap.entity.User;
+import com.bikash.LinkSnap.repository.ClickEventRepository;
 import com.bikash.LinkSnap.repository.UrlMappingRepository;
 import com.bikash.LinkSnap.security.AuthenticationService;
 import com.bikash.LinkSnap.util.Base62Encoder;
@@ -204,6 +205,43 @@ public class UrlMappingService {
                                 )
                                 .clickCount(
                                         url.getClickCount()
+                                )
+                                .build()
+                )
+                .toList();
+    }
+
+
+
+    private final ClickEventRepository clickEventRepository;
+
+    public List<ClickEventResponse>
+    getClickHistory(Long id) {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        UrlMapping urlMapping =
+                repository.findByIdAndUser(
+                                id,
+                                currentUser
+                        )
+                        .orElseThrow();
+
+        return clickEventRepository
+                .findByUrlMapping(urlMapping)
+                .stream()
+                .map(event ->
+                        ClickEventResponse
+                                .builder()
+                                .clickTime(
+                                        event.getClickTime()
+                                )
+                                .ipAddress(
+                                        event.getIpAddress()
+                                )
+                                .userAgent(
+                                        event.getUserAgent()
                                 )
                                 .build()
                 )

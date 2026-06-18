@@ -1,5 +1,6 @@
 package com.bikash.LinkSnap.controller;
 
+import com.bikash.LinkSnap.dto.ClickEventResponse;
 import com.bikash.LinkSnap.dto.UpdateUrlRequest;
 import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
 import com.bikash.LinkSnap.dto.UrlMappingDto;
@@ -77,6 +78,18 @@ public class UrlMappingController {
         return ResponseEntity.ok(
                 urlMappingService
                         .getAnalytics(id)
+        );
+    }
+
+    @GetMapping("/{id}/click-history")
+    public ResponseEntity<
+            List<ClickEventResponse>>
+    getClickHistory(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                urlMappingService
+                        .getClickHistory(id)
         );
     }
 }
