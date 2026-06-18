@@ -10,24 +10,36 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Setter
+@Table(name = "url_mappings")
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UrlMapping {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    private String originalUrl;
-    private String shortUrl;
-    private int clickCount =0;
-    private LocalDateTime CreatedDate;
+    private Long id;
 
-    @ManyToOne
+    @Column(nullable = false, length = 2048)
+    private String originalUrl;
+
+    @Column(unique = true)
+    private String shortCode;
+
+    private Long clickCount = 0L;
+
+    private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "urlMapping")
     private List<ClickEvent> clickEvents;
-}
 
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+}
