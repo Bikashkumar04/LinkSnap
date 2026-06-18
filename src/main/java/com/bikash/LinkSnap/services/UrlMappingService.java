@@ -25,30 +25,64 @@ public class UrlMappingService {
 
     public UrlMappingDto shortenUrl(UrlMappingDto dto) {
 
-        // Get the currently authenticated user it
-        User currentUser = authenticationService.getCurrentUser();
-
+        User currentUser =
+                authenticationService.getCurrentUser();
 
         UrlMapping urlMapping = new UrlMapping();
 
-        urlMapping.setOriginalUrl(dto.getOriginalUrl());
+        urlMapping.setOriginalUrl(
+                dto.getOriginalUrl()
+        );
+
         urlMapping.setUser(currentUser);
 
-        UrlMapping saved = repository.save(urlMapping);
+        UrlMapping saved =
+                repository.save(urlMapping);
 
-        String shortCode =
-                base62Encoder.encode(saved.getId());
+        String shortCode;
+
+        if (dto.getCustomAlias() != null
+                && !dto.getCustomAlias().isBlank()) {
+
+            if (repository.findByShortCode(
+                    dto.getCustomAlias()
+            ).isPresent()) {
+
+                throw new RuntimeException(
+                        "Alias already exists"
+                );
+            }
+
+            shortCode = dto.getCustomAlias();
+
+        } else {
+
+            shortCode =
+                    base62Encoder.encode(saved.getId());
+        }
 
         saved.setShortCode(shortCode);
 
-        repository.save(saved);
+        saved = repository.save(saved);
 
-        UrlMappingDto response = new UrlMappingDto();
+        UrlMappingDto response =
+                new UrlMappingDto();
 
-        response.setOriginalUrl(saved.getOriginalUrl());
-        response.setShortCode(saved.getShortCode());
+        response.setOriginalUrl(
+                saved.getOriginalUrl()
+        );
+
+        response.setCustomAlias(
+                dto.getCustomAlias()
+        );
+
+        response.setShortCode(
+                saved.getShortCode()
+        );
+
         response.setShortUrl(
-                "http://localhost:8080/" + saved.getShortCode()
+                "http://localhost:8080/"
+                        + saved.getShortCode()
         );
 
         return response;
