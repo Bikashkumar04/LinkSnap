@@ -1,9 +1,6 @@
 package com.bikash.LinkSnap.services;
 
-import com.bikash.LinkSnap.dto.DashboardStatsResponse;
-import com.bikash.LinkSnap.dto.UpdateUrlRequest;
-import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
-import com.bikash.LinkSnap.dto.UrlMappingDto;
+import com.bikash.LinkSnap.dto.*;
 import com.bikash.LinkSnap.entity.UrlMapping;
 import com.bikash.LinkSnap.entity.User;
 import com.bikash.LinkSnap.repository.UrlMappingRepository;
@@ -12,6 +9,7 @@ import com.bikash.LinkSnap.util.Base62Encoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -178,5 +176,37 @@ public class UrlMappingService {
                 .totalLinks(totalLinks)
                 .totalClicks(totalClicks)
                 .build();
+    }
+
+
+
+    public List<TopLinkResponse> getTopLinks() {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        return repository.findByUser(currentUser)
+                .stream()
+                .sorted(
+                        Comparator.comparing(
+                                UrlMapping::getClickCount
+                        ).reversed()
+                )
+                .limit(5)
+                .map(url ->
+                        TopLinkResponse.builder()
+                                .id(url.getId())
+                                .shortCode(
+                                        url.getShortCode()
+                                )
+                                .originalUrl(
+                                        url.getOriginalUrl()
+                                )
+                                .clickCount(
+                                        url.getClickCount()
+                                )
+                                .build()
+                )
+                .toList();
     }
 }
