@@ -308,4 +308,66 @@ public class UrlMappingService {
                 )
                 .toList();
     }
+
+
+
+
+    //QR code generation
+    private final QRCodeService qrCodeService;
+
+    public byte[] generateQrCode(Long id) {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        UrlMapping urlMapping =
+                repository.findByIdAndUser(
+                                id,
+                                currentUser
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "URL not found"
+                                ));
+
+        String shortUrl =
+                "http://localhost:8080/"
+                        + urlMapping.getShortCode();
+
+        return qrCodeService.generateQRCode(
+                shortUrl
+        );
+    }
+
+
+    public QrCodeResponse getQrInfo(Long id) {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        UrlMapping url =
+                repository.findByIdAndUser(
+                                id,
+                                currentUser
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "URL not found"));
+
+        return QrCodeResponse.builder()
+                .originalUrl(
+                        url.getOriginalUrl()
+                )
+                .shortCode(
+                        url.getShortCode()
+                )
+                .shortUrl(
+                        "http://localhost:8080/"
+                                + url.getShortCode()
+                )
+                .clickCount(
+                        url.getClickCount()
+                )
+                .build();
+    }
 }

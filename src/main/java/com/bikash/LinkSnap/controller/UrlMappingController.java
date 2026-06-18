@@ -3,6 +3,7 @@ package com.bikash.LinkSnap.controller;
 import com.bikash.LinkSnap.dto.*;
 import com.bikash.LinkSnap.services.UrlMappingService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -86,6 +87,32 @@ public class UrlMappingController {
         return ResponseEntity.ok(
                 urlMappingService
                         .getClickHistory(id)
+        );
+    }
+
+    @GetMapping(
+            value = "/{id}/qr",
+            produces = MediaType.IMAGE_PNG_VALUE
+    )
+    public ResponseEntity<byte[]>
+    generateQrCode(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                urlMappingService
+                        .generateQrCode(id)
+        );
+    }
+
+
+
+    @GetMapping("/{id}/qr-info")
+    public ResponseEntity<QrCodeResponse>
+    getQrInfo(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                urlMappingService.getQrInfo(id)
         );
     }
 }
