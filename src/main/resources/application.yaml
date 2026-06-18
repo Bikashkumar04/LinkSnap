@@ -19,3 +19,9 @@ spring:
   sql:
     init:
       mode: always
+
+security:
+    jwt:
+      secret-key: mySuperSecretKeyThatIsAtLeast32CharactersLong
+      expiration-time: 86400000
+
