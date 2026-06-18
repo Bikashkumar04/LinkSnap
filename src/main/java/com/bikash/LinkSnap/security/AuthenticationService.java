@@ -8,6 +8,7 @@ import com.bikash.LinkSnap.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -54,5 +55,17 @@ public class AuthenticationService {
                 jwtService.generateToken(user.getEmail());
 
         return new AuthResponse(token);
+    }
+
+
+    //This method will be used to get the currently authenticated user in the application. It retrieves the username from the security context and then fetches the corresponding user from the database using the UserRepository.
+    public User getCurrentUser() {
+
+        String Username = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+        return userRepository.findByEmailOrUsername(Username, Username)
+                .orElseThrow();
     }
 }
