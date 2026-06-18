@@ -1,6 +1,7 @@
 package com.bikash.LinkSnap.controller;
 
 import com.bikash.LinkSnap.dto.UpdateUrlRequest;
+import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
 import com.bikash.LinkSnap.dto.UrlMappingDto;
 import com.bikash.LinkSnap.entity.UrlMapping;
 import com.bikash.LinkSnap.services.UrlMappingService;
@@ -64,6 +65,18 @@ public class UrlMappingController {
                         id,
                         request
                 )
+        );
+    }
+
+
+    @GetMapping("/{id}/analytics")
+    public ResponseEntity<UrlAnalyticsResponse>
+    getAnalytics(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                urlMappingService
+                        .getAnalytics(id)
         );
     }
 }

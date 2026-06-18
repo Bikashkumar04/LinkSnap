@@ -1,6 +1,7 @@
 package com.bikash.LinkSnap.services;
 
 import com.bikash.LinkSnap.dto.UpdateUrlRequest;
+import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
 import com.bikash.LinkSnap.dto.UrlMappingDto;
 import com.bikash.LinkSnap.entity.UrlMapping;
 import com.bikash.LinkSnap.entity.User;
@@ -118,5 +119,40 @@ public class UrlMappingService {
         );
 
         return repository.save(urlMapping);
+    }
+
+
+    public UrlAnalyticsResponse getAnalytics(
+            Long id) {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        UrlMapping urlMapping =
+                repository.findByIdAndUser(
+                                id,
+                                currentUser
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "URL not found"));
+
+        return UrlAnalyticsResponse
+                .builder()
+                .originalUrl(
+                        urlMapping.getOriginalUrl()
+                )
+                .shortCode(
+                        urlMapping.getShortCode()
+                )
+                .clickCount(
+                        Long.valueOf(
+                                urlMapping.getClickCount()
+                        )
+                )
+                .createdAt(
+                        urlMapping.getCreatedAt()
+                )
+                .build();
     }
 }
