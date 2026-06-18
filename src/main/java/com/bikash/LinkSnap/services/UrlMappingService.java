@@ -1,5 +1,6 @@
 package com.bikash.LinkSnap.services;
 
+import com.bikash.LinkSnap.dto.DashboardStatsResponse;
 import com.bikash.LinkSnap.dto.UpdateUrlRequest;
 import com.bikash.LinkSnap.dto.UrlAnalyticsResponse;
 import com.bikash.LinkSnap.dto.UrlMappingDto;
@@ -153,6 +154,29 @@ public class UrlMappingService {
                 .createdAt(
                         urlMapping.getCreatedAt()
                 )
+                .build();
+    }
+
+
+
+    public DashboardStatsResponse getDashboardStats() {
+
+        User currentUser =
+                authenticationService.getCurrentUser();
+
+        List<UrlMapping> urls =
+                repository.findByUser(currentUser);
+
+        long totalLinks = urls.size();
+
+        long totalClicks = urls.stream()
+                .mapToLong(UrlMapping::getClickCount)
+                .sum();
+
+        return DashboardStatsResponse
+                .builder()
+                .totalLinks(totalLinks)
+                .totalClicks(totalClicks)
                 .build();
     }
 }
