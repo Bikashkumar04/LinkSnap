@@ -19,7 +19,6 @@ public class User {
     private String username;
     private String password;
     private String role ="USER";
-
-
-
+    @Column(nullable = false)
+    private boolean enabled = false;
 }

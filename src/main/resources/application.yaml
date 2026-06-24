@@ -3,9 +3,9 @@ spring:
     name: LinkSnap
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/linksnap
-    username: postgres
-    password: ${POSTGRES_PASSWORD}
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -20,8 +20,25 @@ spring:
     init:
       mode: always
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 security:
     jwt:
-      secret-key: mySuperSecretKeyThatIsAtLeast32CharactersLong
-      expiration-time: 86400000
+      secret-key: ${JWT_SECRET_KEY}
+      expiration-time: ${JWT_EXPIRATION_TIME}
 
+
+frontend:
+  url: ${FRONTEND_URL}
+
+backend:
+  url: ${BACKEND_URL}

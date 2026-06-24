@@ -9,6 +9,7 @@ import com.bikash.LinkSnap.security.AuthenticationService;
 import com.bikash.LinkSnap.util.Base62Encoder;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,10 @@ public class UrlMappingService {
     private final Base62Encoder base62Encoder;
     private final AuthenticationService authenticationService;
     private final ModelMapper modelMapper;
+
+
+    @Value("${backend.url}")
+    private String backendUrl;
 
     public UrlMappingDto shortenUrl(UrlMappingDto dto) {
 
@@ -103,7 +108,7 @@ public class UrlMappingService {
         );
 
         response.setShortUrl(
-                "http://localhost:8080/"
+                backendUrl
                         + saved.getShortCode()
         );
 
@@ -382,7 +387,7 @@ public class UrlMappingService {
                                 ));
 
         String shortUrl =
-                "http://localhost:8080/"
+                backendUrl
                         + urlMapping.getShortCode();
 
         return qrCodeService.generateQRCode(
@@ -413,7 +418,7 @@ public class UrlMappingService {
                         url.getShortCode()
                 )
                 .shortUrl(
-                        "http://localhost:8080/"
+                        backendUrl
                                 + url.getShortCode()
                 )
                 .clickCount(
